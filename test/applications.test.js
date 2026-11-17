@@ -22,3 +22,25 @@ test('commands and maximum-size review messages serialize within Discord limits'
  const a={id:1,name:'x'.repeat(24),user:'user',status:'accepted',reviewer:'staff',note:'x'.repeat(250),questions:Array(5).fill('q'.repeat(100)),answers:Array(5).fill('a'.repeat(1000)),created:0};
  const payload=reviewMessage(a);assert.equal(payload.components.length,0);const embed=payload.embeds[0];assert.ok(embed.length<=6000);assert.ok(embed.toJSON());
 });
+test('only the applicant can withdraw, preserving history and allowing reapplication',()=>{
+ const s=fixture();try{
+  const d=s.draft('g','user','helper'),a=s.submit('g','user',d.id,['original answer']);
+  assert.throws(()=>s.withdraw('g',a.id,'someone-else'));
+  assert.throws(()=>s.withdraw('other',a.id,'user'));
+  const withdrawn=s.withdraw('g',a.id,'user');
+  assert.equal(withdrawn.status,'withdrawn');assert.deepEqual(withdrawn.answers,['original answer']);
+  assert.equal(s.history('g','user')[0].status,'withdrawn');
+  assert.equal(reviewMessage(withdrawn).components.length,0);
+  assert.throws(()=>s.review('g',a.id,'staff',true,'accepted'));
+  assert.throws(()=>s.withdraw('g',a.id,'user'));
+  const next=s.draft('g','user','helper');assert.ok(s.submit('g','user',next.id,['new answer']));
+ }finally{s.close();}
+});
+test('reviewed applications cannot be withdrawn or have their decisions changed',()=>{
+ const s=fixture();try{
+  const d=s.draft('g','user','helper'),a=s.submit('g','user',d.id,['answer']);
+  s.review('g',a.id,'staff',true,'accepted','Welcome');
+  assert.throws(()=>s.withdraw('g',a.id,'user'));
+  assert.equal(s.get('g',a.id).status,'accepted');assert.equal(s.get('g',a.id).note,'Welcome');
+ }finally{s.close();}
+});

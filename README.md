@@ -35,6 +35,10 @@ Manage Server is required for configuration and panel creation.
    or use `/app-review id:<id> decision:<accepted|denied> note:<optional note>`.
 6. `/app-history` shows your last ten applications and review notes.
    `/app-view id:<id>` shows full answers to the applicant or reviewers privately.
+7. `/app-withdraw id:<id>` withdraws your own pending application. It remains in
+   history and cannot be reviewed afterward. You can submit a new application
+   while the template is open. If message refresh fails, the saved withdrawal
+   still blocks stale review buttons; staff can refresh it with `/app-post`.
 
 `/app-toggle name:helper open:false` closes submissions, including already-open
 forms. `/app-templates` lists templates and questions. Repeat configuration for
@@ -81,3 +85,10 @@ Tests cover stable question snapshots, form ownership and expiry, paused templat
 answer validation, duplicate submissions, review permissions, self-review,
 one-time decisions and Discord payload limits. Gateway delivery and channel
 permissions still need a live Discord test server.
+
+## Updating
+
+Run `git pull --ff-only` and `npm ci`, then re-register the guild commands with
+`node --env-file=.env src/deploy.js` before restarting the bot.
+See [CHANGELOG.md](CHANGELOG.md) for the latest behavior changes. This update
+does not require a database migration.

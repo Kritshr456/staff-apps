@@ -48,6 +48,11 @@ export function openStore(path=':memory:',clock=()=>Date.now()){
    const applicationId=Number(db.prepare('INSERT INTO applications(draft,guild,user,name,questions,answers,role,channel,created) VALUES(?,?,?,?,?,?,?,?,?)').run(id,guild,user,d.name,d.questions,JSON.stringify(answers.map(a=>a.trim())),d.role,d.channel,clock()).lastInsertRowid);
    db.prepare('DELETE FROM drafts WHERE id=?').run(id);return get(guild,applicationId);
  });},
+ withdraw(guild,id,user){
+   const changed=db.prepare("UPDATE applications SET status='withdrawn',reviewed=? WHERE guild=? AND id=? AND user=? AND status='pending'").run(clock(),guild,id,user).changes;
+   if(!changed)throw new AppError('Only your own pending application can be withdrawn.');
+   return get(guild,id);
+ },
  review(guild,id,reviewer,allowed,decision,note=''){
    if(!['accepted','denied'].includes(decision))throw new AppError('Decision must be accepted or denied.');
    if(typeof note!=='string'||note.length>250)throw new AppError('Notes are limited to 250 characters.');

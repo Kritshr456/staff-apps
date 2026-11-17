@@ -44,6 +44,11 @@ client.on(Events.InteractionCreate,async i=>{
      catch{console.error('Application saved but review delivery failed',{id:a.id});await i.editReply(`Application #${a.id} saved. Staff must use /app-post to retry review delivery.`);}
      return;
    }
+   if(i.isChatInputCommand()&&i.commandName==='app-withdraw'){
+     const updated=store.withdraw(i.guildId,i.options.getInteger('id',true),i.user.id);
+     try{await publish(i.guild,updated);}catch{console.error('Withdrawal saved but message update failed',{id:updated.id});}
+     return await i.editReply(`Application #${updated.id} withdrawn. You may submit a new application while the template is open.`);
+   }
    if(i.isButton()||i.commandName==='app-review'){
      const parts=i.isButton()?i.customId.split(':'):null;
      const id=parts?Number(parts[2]):i.options.getInteger('id',true);
