@@ -15,5 +15,13 @@ export const commands=[
  id(cmd('app-withdraw','Withdraw your pending application')),
  id(cmd('app-post','Post or refresh the review message')),
  id(cmd('app-review','Review an application')).addStringOption(o=>o.setName('decision').setDescription('Decision').addChoices({name:'Accept',value:'accepted'},{name:'Deny',value:'denied'}).setRequired(true)).addStringOption(o=>o.setName('note').setDescription('Optional note visible to the applicant').setMaxLength(250)),
+ id(cmd('app-claim','Claim an application for review')),
+ id(cmd('app-unclaim','Release your claim; managers can release any claim')),
+ id(cmd('app-followup','Ask the applicant a follow-up question')).addStringOption(o=>o.setName('question').setDescription('Question for the applicant').setMaxLength(300).setRequired(true)),
+ id(cmd('app-followup-cancel','Cancel an unanswered follow-up request')),
+ id(cmd('app-followups','View an application’s follow-up conversation')),
+ id(cmd('app-respond','Answer your pending follow-up in a private form')),
+ id(cmd('app-audit','View the reviewer-only audit trail')).addIntegerOption(o=>o.setName('page').setDescription('Audit page, newest first').setMinValue(1).setMaxValue(100000)),
+ name(cmd('app-cooldown','Set the reapplication cooldown',true)).addIntegerOption(o=>o.setName('minutes').setDescription('0 disables cooldown; up to 30 days').setMinValue(0).setMaxValue(43200).setRequired(true)),
  cmd('app-history','View your application history'),
 ];
