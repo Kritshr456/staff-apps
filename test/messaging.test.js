@@ -101,3 +101,43 @@ test('delivered decision buttons pause for an open follow-up and resume after re
     assert.equal(decisions(f.edited.at(-1)).length, 0);
   } finally { f.store.close(); }
 });
+
+test('temporary fetch failure preserves the message ID and retry edits the original', async () => {
+  const f = fixture();
+  try {
+    await f.publish(f.guild, f.a.id);
+    const fetch = f.channel.messages.fetch;
+    f.channel.messages.fetch = async () => { throw Object.assign(Error('Service unavailable'), { status: 503 }); };
+    await assert.rejects(f.publish(f.guild, f.a.id), /Service unavailable/);
+    assert.equal(f.sent.length, 1);
+    assert.equal(f.store.get('g', f.a.id).message, 'message');
+    f.channel.messages.fetch = fetch;
+    await f.publish(f.guild, f.a.id);
+    assert.equal(f.sent.length, 1);
+    assert.equal(f.edited.length, 1);
+  } finally { f.store.close(); }
+});
+
+test('missing access never creates a duplicate review message', async () => {
+  const f = fixture();
+  try {
+    await f.publish(f.guild, f.a.id);
+    f.channel.messages.fetch = async () => { throw Object.assign(Error('Missing access'), { code: 50001 }); };
+    await assert.rejects(f.publish(f.guild, f.a.id), /Missing access/);
+    assert.equal(f.sent.length, 1);
+    assert.equal(f.store.get('g', f.a.id).message, 'message');
+  } finally { f.store.close(); }
+});
+
+test('a confirmed deleted review message is recreated and its replacement ID saved', async () => {
+  const f = fixture();
+  try {
+    await f.publish(f.guild, f.a.id);
+    f.channel.messages.fetch = async () => { throw Object.assign(Error('Unknown Message'), { code: 10008 }); };
+    f.channel.send = async payload => { f.sent.push(payload); return { id: 'replacement' }; };
+    await f.publish(f.guild, f.a.id);
+    assert.equal(f.sent.length, 2);
+    assert.equal(f.store.get('g', f.a.id).message, 'replacement');
+    assert.deepEqual(f.sent[1].allowedMentions, { parse: [] });
+  } finally { f.store.close(); }
+});
