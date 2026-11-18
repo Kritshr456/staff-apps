@@ -76,3 +76,13 @@ export function historyMessage(rows, now = Date.now()) {
   }
   return { embeds: [embed], allowedMentions: { parse: [] } };
 }
+
+export function queueMessage(result) {
+  const embed = new EmbedBuilder().setTitle('Pending application reviews').setColor(0x345b83)
+    .setDescription(`Filter: ${result.filter}${result.name ? ` • Template: ${result.name}` : ''}`)
+    .setFooter({ text: `Page ${result.page} of ${Math.max(1, Math.ceil(result.total / 5))} • ${result.total} applications • oldest first` });
+  if (!result.rows.length) embed.setDescription('No reviewable applications on this page.');
+  for (const a of result.rows) embed.addFields({ name: `#${a.id} ${a.name}`, value:
+    `Applicant: <@${a.user}>\n${a.claimed_by ? `Claimed by: <@${a.claimed_by}>` : 'Unclaimed'}\nSubmitted: ${new Date(a.created).toISOString()}${a.awaiting_reply ? '\nAwaiting applicant response' : ''}` });
+  return { embeds: [embed], allowedMentions: { parse: [] } };
+}

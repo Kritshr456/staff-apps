@@ -213,6 +213,27 @@ export function openStore(path = ':memory:', clock = () => Date.now()) {
         return get(guild, id);
       });
     },
+    reviewQueue({ guild, user, roles = [], isManager = false, name = null, filter = 'all', page = 1 }) {
+      if (!Number.isInteger(page) || page < 1 || page > 100000) throw new AppError('Invalid queue page.');
+      if (!['all', 'unclaimed', 'mine', 'waiting'].includes(filter)) throw new AppError('Invalid queue filter.');
+      if (!Array.isArray(roles) || roles.length > 500 || roles.some(role => typeof role !== 'string')) throw new AppError('Invalid reviewer roles.');
+      const clauses = ["a.guild=?", "a.status='pending'", 'a.user!=?'], args = [guild, user];
+      if (isManager !== true) {
+        if (!roles.length) return { page, filter, name, total: 0, rows: [] };
+        const unique = [...new Set(roles)];
+        clauses.push(`a.role IN (${unique.map(() => '?').join(',')})`); args.push(...unique);
+      }
+      if (name !== null) { clauses.push('a.name=?'); args.push(name); }
+      if (filter === 'unclaimed') clauses.push('a.claimed_by IS NULL');
+      if (filter === 'mine') { clauses.push('a.claimed_by=?'); args.push(user); }
+      if (filter === 'waiting') clauses.push("EXISTS(SELECT 1 FROM followups f WHERE f.application=a.id AND f.status='open')");
+      const where = clauses.join(' AND ');
+      const total = db.prepare(`SELECT COUNT(*) AS total FROM applications a WHERE ${where}`).get(...args).total;
+      const rows = db.prepare(`SELECT a.id,a.user,a.name,a.claimed_by,a.created,
+        EXISTS(SELECT 1 FROM followups f WHERE f.application=a.id AND f.status='open') AS awaiting_reply
+        FROM applications a WHERE ${where} ORDER BY a.created,a.id LIMIT 5 OFFSET ?`).all(...args, (page - 1) * 5);
+      return { page, filter, name, total, rows };
+    },
     audit(guild, id, page = 1) {
       const a = application(guild, id);
       if (!Number.isInteger(page) || page < 1 || page > 100000) throw new AppError('Invalid audit page.');

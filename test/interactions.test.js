@@ -12,7 +12,7 @@ function suite() {
   let failDelivery = false;
   const guild = { id: 'g', members: { fetch: async user => ({ id: user,
     permissions: { has: flag => user === 'manager' && flag === P.ManageGuild },
-    roles: { cache: { has: role => roles.get(user)?.has(role) || false } },
+    roles: { cache: { has: role => roles.get(user)?.has(role) || false, keys: () => (roles.get(user) || new Set()).keys() } },
   }) } };
   const handle = createInteractionHandler({ store,
     publish: async (g, id) => { if (failDelivery) throw Error('private delivery error'); published.push(store.get(g.id, id)); },
@@ -182,5 +182,19 @@ test('editing question templates requires Manage Server', async () => {
     assert.match((await f.call({ user: 'reviewer-1', command: 'app-edit-question', values })).output, /Manage Server/);
     assert.equal((await f.call({ user: 'manager', command: 'app-edit-question', values })).output, 'Saved.');
     assert.deepEqual(f.store.template('g', 'helper').questions, ['Updated question']);
+  } finally { f.store.close(); }
+});
+
+test('queue replies are private and role revocation removes pending applications', async () => {
+  const f = suite();
+  try {
+    const id = await f.submit('applicant');
+    const visible = await f.call({ user: 'reviewer-1', command: 'app-queue' });
+    assert.equal(visible.deferOptions.flags, MessageFlags.Ephemeral);
+    assert.match(visible.output.embeds[0].toJSON().fields[0].name, new RegExp(`#${id}`));
+    f.roles.get('reviewer-1').clear();
+    const revoked = await f.call({ user: 'reviewer-1', command: 'app-queue' });
+    assert.equal(revoked.output.embeds[0].toJSON().fields, undefined);
+    assert.ok(!JSON.stringify(revoked.output).includes('My original answer'));
   } finally { f.store.close(); }
 });

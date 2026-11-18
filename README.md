@@ -63,6 +63,14 @@ review their own application, including server managers.
 Claims do not expire automatically. Accepted, denied and withdrawn applications
 are final; duplicate or stale buttons cannot change them.
 
+## Find pending reviews
+
+`/app-queue` privately lists five pending applications per page, oldest first.
+Filter with `filter:unclaimed`, `filter:mine` or `filter:waiting`, restrict by
+`name:<template>`, or choose `page:2`. Only applications matching your current
+reviewer roles are included; managers see all except their own applications.
+The queue shows ownership and follow-up status, never application answers.
+
 ## Ask for more information
 
 1. Claim the application.

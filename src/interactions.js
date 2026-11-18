@@ -1,7 +1,7 @@
 import { PermissionFlagsBits as P, ChannelType, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { AppError } from './store.js';
 import { commands } from './commands.js';
-import { applicationModal, responseModal, reviewMessage, followupMessage, responseButton, auditMessage, historyMessage } from './presentation.js';
+import { applicationModal, responseModal, reviewMessage, followupMessage, responseButton, auditMessage, historyMessage, queueMessage } from './presentation.js';
 import { reviewChannel } from './messaging.js';
 
 const names = new Set(commands.map(c => c.name));
@@ -53,6 +53,11 @@ export function createInteractionHandler({ store, publish, log = data => console
         return await savedReply(a, `Application #${a.id} submitted. Check /app-history for decisions or follow-up requests.`);
       }
       const member = await i.guild.members.fetch(i.user.id);
+      if (chat && i.commandName === 'app-queue') {
+        const result = store.reviewQueue({ guild: i.guildId, user: i.user.id, roles: [...member.roles.cache.keys()],
+          isManager: isManager(member), name: i.options.getString('name'), filter: i.options.getString('filter') || 'all', page: i.options.getInteger('page') || 1 });
+        return await i.editReply(queueMessage(result));
+      }
       if (button && i.customId.startsWith('followups:')) {
         const a = visible(store, i.guildId, id(i.customId.slice(10)), member, i.user.id);
         return await i.editReply(followupMessage(a, a.user === i.user.id));

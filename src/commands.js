@@ -22,6 +22,7 @@ export const commands=[
  id(cmd('app-followup-cancel','Cancel an unanswered follow-up request')),
  id(cmd('app-followups','View an application’s follow-up conversation')),
  id(cmd('app-respond','Answer your pending follow-up in a private form')),
+ cmd('app-queue','Browse pending applications you can review').addStringOption(o=>o.setName('name').setDescription('Optional template name').setMaxLength(24)).addStringOption(o=>o.setName('filter').setDescription('Queue filter').addChoices({name:'All',value:'all'},{name:'Unclaimed',value:'unclaimed'},{name:'My claims',value:'mine'},{name:'Awaiting applicant',value:'waiting'})).addIntegerOption(o=>o.setName('page').setDescription('Queue page, oldest first').setMinValue(1).setMaxValue(100000)),
  id(cmd('app-audit','View the reviewer-only audit trail')).addIntegerOption(o=>o.setName('page').setDescription('Audit page, newest first').setMinValue(1).setMaxValue(100000)),
  name(cmd('app-cooldown','Set the reapplication cooldown',true)).addIntegerOption(o=>o.setName('minutes').setDescription('0 disables cooldown; up to 30 days').setMinValue(0).setMaxValue(43200).setRequired(true)),
  cmd('app-history','View your application history'),

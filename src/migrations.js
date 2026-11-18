@@ -14,6 +14,7 @@ export function migrate(db) {
         status TEXT NOT NULL DEFAULT 'pending',reviewer TEXT,note TEXT,created INTEGER,reviewed INTEGER,
         claimed_by TEXT,claimed_at INTEGER,cooldown_until INTEGER NOT NULL DEFAULT 0);
       CREATE UNIQUE INDEX IF NOT EXISTS pending_application ON applications(guild,user,name) WHERE status='pending';
+      CREATE INDEX IF NOT EXISTS pending_queue ON applications(guild,status,created,id);
       CREATE TABLE IF NOT EXISTS followups(id INTEGER PRIMARY KEY AUTOINCREMENT,
         application INTEGER NOT NULL REFERENCES applications(id),question TEXT NOT NULL,
         asked_by TEXT NOT NULL,asked INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'open',

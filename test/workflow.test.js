@@ -261,3 +261,40 @@ test('editing template questions preserves order, existing forms and submitted s
     reject(() => s.editQuestion('other', 'helper', 1, 'Invalid'));
   } finally { s.close(); }
 });
+
+test('review queue filters visibility, templates, claim ownership and waiting replies', () => {
+  const { s, a } = fixture();
+  try {
+    s.configure('g', 'restricted', 'other-role', 'other-channel'); s.question('g', 'restricted', 'Secret question');
+    const d = s.draft('g', 'other-user', 'restricted'); s.submit('g', 'other-user', d.id, ['Secret answer']);
+    const query = { guild: 'g', user: 'r1', roles: ['role'] };
+    assert.equal(s.reviewQueue(query).total, 1);
+    assert.equal(s.reviewQueue({ ...query, roles: [] }).total, 0);
+    assert.equal(s.reviewQueue({ ...query, guild: 'other' }).total, 0);
+    assert.equal(s.reviewQueue({ ...query, user: a.user }).total, 0);
+    assert.equal(s.reviewQueue({ ...query, isManager: true }).total, 2);
+    s.claim('g', a.id, 'r1', true);
+    assert.equal(s.reviewQueue({ ...query, filter: 'unclaimed' }).total, 0);
+    assert.equal(s.reviewQueue({ ...query, filter: 'mine' }).total, 1);
+    s.askFollowup('g', a.id, 'r1', true, 'Question');
+    assert.equal(s.reviewQueue({ ...query, filter: 'waiting' }).total, 1);
+    assert.equal(s.reviewQueue({ ...query, name: "helper' OR 1=1 --" }).total, 0);
+    const row = s.reviewQueue(query).rows[0];
+    assert.ok(!('answers' in row)); assert.ok(!('questions' in row));
+    s.withdraw('g', a.id, a.user); assert.equal(s.reviewQueue(query).total, 0);
+  } finally { s.close(); }
+});
+
+test('review queue pagination is stable and rejects invalid filters and page values', () => {
+  const { s } = fixture();
+  try {
+    for (let n = 0; n < 10; n++) { const d = s.draft('g', `user${n}`, 'helper'); s.submit('g', `user${n}`, d.id, ['Answer']); }
+    const query = { guild: 'g', user: 'r1', roles: ['role'] };
+    const first = s.reviewQueue(query), second = s.reviewQueue({ ...query, page: 2 });
+    assert.equal(first.total, 11); assert.equal(first.rows.length, 5); assert.equal(second.rows.length, 5);
+    assert.ok(first.rows.at(-1).id < second.rows[0].id);
+    assert.equal(s.reviewQueue({ ...query, page: 3 }).rows.length, 1);
+    assert.equal(s.reviewQueue({ ...query, page: 4 }).rows.length, 0);
+    reject(() => s.reviewQueue({ ...query, page: 0 })); reject(() => s.reviewQueue({ ...query, filter: 'invalid' }));
+  } finally { s.close(); }
+});

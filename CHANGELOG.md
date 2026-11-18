@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a private, role-filtered pending review queue with template, claim and follow-up filters.
+
 - Edit template questions in place without rewriting open forms or submitted applications.
 
 - Distinguish active and expired reapplication cooldowns in application history, including the exact expiry boundary.
