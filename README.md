@@ -32,6 +32,8 @@ Manage Server is required for configuration and panel creation.
 2. `/app-template name:helper reviewer:<role> channel:<private-channel>`
 3. Add one to five questions using `/app-question name:helper prompt:<question>`.
    `/app-remove-question name:helper number:2` removes a question.
+   `/app-edit-question name:helper number:2 prompt:<replacement>` edits in place;
+   existing forms and submitted applications keep their original questions.
 4. Optionally set `/app-cooldown name:helper minutes:1440` for a one-day wait before
    reapplying. The default is zero; the maximum is 43200 minutes (30 days).
 5. `/app-panel name:helper` posts an **Apply** button in the current text channel.

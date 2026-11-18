@@ -174,3 +174,13 @@ test('unrelated interactions and DMs do not trigger application handling', async
     assert.deepEqual(f.logs, []);
   } finally { f.store.close(); }
 });
+
+test('editing question templates requires Manage Server', async () => {
+  const f = suite();
+  try {
+    const values = { name: 'helper', number: 1, prompt: 'Updated question' };
+    assert.match((await f.call({ user: 'reviewer-1', command: 'app-edit-question', values })).output, /Manage Server/);
+    assert.equal((await f.call({ user: 'manager', command: 'app-edit-question', values })).output, 'Saved.');
+    assert.deepEqual(f.store.template('g', 'helper').questions, ['Updated question']);
+  } finally { f.store.close(); }
+});

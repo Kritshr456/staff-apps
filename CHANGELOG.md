@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Edit template questions in place without rewriting open forms or submitted applications.
+
 - Distinguish active and expired reapplication cooldowns in application history, including the exact expiry boundary.
 
 ## 1.2.1

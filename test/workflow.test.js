@@ -245,3 +245,19 @@ test('history distinguishes active, expired and disabled cooldowns at the expiry
   assert.doesNotMatch(value(row, 60000), /Reapply after:/);
   assert.doesNotMatch(value({ ...row, cooldown_until: 0 }, 60000), /Cooldown|Reapply/);
 });
+
+test('editing template questions preserves order, existing forms and submitted snapshots', () => {
+  const { s, a } = fixture();
+  try {
+    s.question('g', 'helper', 'Second question');
+    const draft = s.draft('g', 'next-user', 'helper');
+    s.editQuestion('g', 'helper', 1, '  Revised question  ');
+    assert.deepEqual(s.template('g', 'helper').questions, ['Revised question', 'Second question']);
+    const next = s.submit('g', 'next-user', draft.id, ['Original prompt answer', 'Second answer']);
+    assert.deepEqual(next.questions, ['Why do you want to help?', 'Second question']);
+    assert.deepEqual(s.get('g', a.id).questions, ['Why do you want to help?']);
+    for (const index of [0, 3, 1.5]) reject(() => s.editQuestion('g', 'helper', index, 'Invalid'));
+    reject(() => s.editQuestion('g', 'helper', 1, ' '));
+    reject(() => s.editQuestion('other', 'helper', 1, 'Invalid'));
+  } finally { s.close(); }
+});

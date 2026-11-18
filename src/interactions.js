@@ -101,6 +101,7 @@ export function createInteractionHandler({ store, publish, log = data => console
           await reviewChannel(i.guild, channel.id, role.id); store.configure(i.guildId, name, role.id, channel.id); break;
         }
         case 'app-question': store.question(i.guildId, name, i.options.getString('prompt', true)); break;
+        case 'app-edit-question': store.editQuestion(i.guildId, name, i.options.getInteger('number', true), i.options.getString('prompt', true)); break;
         case 'app-remove-question': store.removeQuestion(i.guildId, name, i.options.getInteger('number', true)); break;
         case 'app-toggle': store.toggle(i.guildId, name, i.options.getBoolean('open', true)); break;
         case 'app-cooldown': store.setCooldown(i.guildId, name, i.options.getInteger('minutes', true)); break;

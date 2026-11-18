@@ -93,6 +93,12 @@ export function openStore(path = ':memory:', clock = () => Date.now()) {
       t.questions.push(prompt);
       db.prepare('UPDATE templates SET questions=? WHERE guild=? AND name=?').run(JSON.stringify(t.questions), guild, name);
     },
+    editQuestion(guild, name, index, prompt) {
+      const t = required(guild, name);
+      if (!Number.isInteger(index) || index < 1 || index > t.questions.length) throw new AppError('Question number does not exist.');
+      t.questions[index - 1] = boundedText(prompt, 100, 'Questions');
+      db.prepare('UPDATE templates SET questions=? WHERE guild=? AND name=?').run(JSON.stringify(t.questions), guild, name);
+    },
     removeQuestion(guild, name, index) {
       const t = required(guild, name);
       if (!Number.isInteger(index) || index < 1 || index > t.questions.length) throw new AppError('Question number does not exist.');
