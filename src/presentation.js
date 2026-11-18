@@ -36,8 +36,8 @@ export function reviewMessage(a) {
   if (a.status === 'pending') {
     buttons.push(new ButtonBuilder().setCustomId(`claim:${a.id}`).setLabel(a.claimed_by ? 'Claimed' : 'Claim')
       .setDisabled(Boolean(a.claimed_by)).setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`review:accepted:${a.id}`).setLabel('Accept').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId(`review:denied:${a.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger));
+    new ButtonBuilder().setCustomId(`review:accepted:${a.id}`).setLabel('Accept').setDisabled(open).setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`review:denied:${a.id}`).setLabel('Deny').setDisabled(open).setStyle(ButtonStyle.Danger));
   }
   if (followups.length) buttons.push(new ButtonBuilder().setCustomId(`followups:${a.id}`).setLabel('View follow-ups').setStyle(ButtonStyle.Secondary));
   return { embeds: [embed], components: buttons.length ? [new ActionRowBuilder().addComponents(buttons)] : [], allowedMentions: { parse: [] } };

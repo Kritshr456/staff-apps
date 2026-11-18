@@ -1,6 +1,6 @@
 {
   "name": "staff-apps",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Discord staff applications with reviewer claims, follow-ups and an audit trail",
   "type": "module",

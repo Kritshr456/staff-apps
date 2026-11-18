@@ -76,7 +76,9 @@ was opened for; it cannot answer a later question. Only one request may be open
 at once, and an application supports three requests total, including cancelled
 ones. Answered and cancelled requests remain in the conversation history.
 
-A final decision is blocked while a request is open. If the applicant cannot
+Accept and Deny buttons are disabled while a request is open and re-enabled when
+it is answered or cancelled. The server also blocks decisions from older buttons.
+If the applicant cannot
 respond, the claimant can use `/app-followup-cancel id:<id>` before deciding.
 Withdrawing an application cancels any open request. Replies to cancelled,
 answered or resolved requests are rejected. Follow-ups remain part of the same
@@ -169,3 +171,9 @@ preserved. Existing applications start unclaimed, cooldowns default to zero, and
 no historical audit events are invented. No manual SQL or reset is required.
 Restore the pre-upgrade backup to roll back; older releases do not enforce claims,
 follow-ups or cooldowns. See [CHANGELOG.md](CHANGELOG.md) for release changes.
+
+### Updating from 1.2.0
+
+Pull the update, run `npm ci` and restart. No command re-registration or database
+migration is needed for this patch. Use `/app-post id:<id>` to refresh an existing
+review message; later workflow changes also refresh its buttons automatically.

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.1
+
+- Disable Accept and Deny buttons while a follow-up request is awaiting a reply.
+- Re-enable decisions after the request is answered or cancelled. Server-side checks continue to reject stale buttons.
+- Add a message-delivery regression test for these button state transitions.
+
+### Upgrade
+
+Restart after pulling and installing dependencies. No command or schema changes. Refresh existing review messages with `/app-post` to apply the updated buttons immediately.
+
 ## 1.2.0
 
 - Add reviewer claims and explicit, audited claim releases. Managers can release another reviewer's claim; self-review remains blocked.

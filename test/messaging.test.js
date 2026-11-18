@@ -76,3 +76,28 @@ test('failed delivery does not poison the queue or alter saved decisions', async
     assert.equal(f.sent[0].components.length, 0);
   } finally { f.store.close(); }
 });
+
+test('delivered decision buttons pause for an open follow-up and resume after resolution', async () => {
+  const f = fixture();
+  const decisions = payload => payload.components.flatMap(row => row.toJSON().components)
+    .filter(button => button.custom_id.startsWith('review:'));
+  try {
+    f.store.claim('g', f.a.id, 'reviewer', true);
+    const request = f.store.askFollowup('g', f.a.id, 'reviewer', true, 'Availability?').followups[0];
+    await f.publish(f.guild, f.a.id);
+    assert.equal(decisions(f.sent[0]).length, 2);
+    assert.ok(decisions(f.sent[0]).every(button => button.disabled === true));
+    f.store.answerFollowup('g', request.id, f.a.user, 'Evenings');
+    await f.publish(f.guild, f.a.id);
+    assert.ok(decisions(f.edited.at(-1)).every(button => button.disabled === false));
+    f.store.askFollowup('g', f.a.id, 'reviewer', true, 'Another question');
+    await f.publish(f.guild, f.a.id);
+    assert.ok(decisions(f.edited.at(-1)).every(button => button.disabled === true));
+    f.store.cancelFollowup('g', f.a.id, 'reviewer', true);
+    await f.publish(f.guild, f.a.id);
+    assert.ok(decisions(f.edited.at(-1)).every(button => button.disabled === false));
+    f.store.review('g', f.a.id, 'reviewer', true, 'accepted');
+    await f.publish(f.guild, f.a.id);
+    assert.equal(decisions(f.edited.at(-1)).length, 0);
+  } finally { f.store.close(); }
+});
