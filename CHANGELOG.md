@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Distinguish active and expired reapplication cooldowns in application history, including the exact expiry boundary.
+
 ## 1.2.1
 
 - Disable Accept and Deny buttons while a follow-up request is awaiting a reply.

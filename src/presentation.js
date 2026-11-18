@@ -61,14 +61,17 @@ export function auditMessage(id, result) {
     .setFooter({ text: `Page ${result.page} • ${result.total} events • newest first` })], allowedMentions: { parse: [] } };
 }
 
-export function historyMessage(rows) {
+export function historyMessage(rows, now = Date.now()) {
   const embed = new EmbedBuilder().setTitle('Your applications').setColor(0x345b83);
   if (!rows.length) embed.setDescription('No applications yet.');
   for (const a of rows) {
     const lines = [`Submitted: ${new Date(a.created).toISOString()}`];
     if (a.awaiting_reply) lines.push(`Awaiting your reply: /app-followups id:${a.id}`);
     if (a.note) lines.push(a.note);
-    if (a.cooldown_until) lines.push(`Reapply after: ${new Date(a.cooldown_until).toISOString()}`);
+    if (a.cooldown_until) {
+      const label = a.cooldown_until > now ? 'Reapply after' : 'Cooldown ended';
+      lines.push(`${label}: ${new Date(a.cooldown_until).toISOString()}`);
+    }
     embed.addFields({ name: `#${a.id} ${a.name} • ${a.status}`, value: lines.join('\n') });
   }
   return { embeds: [embed], allowedMentions: { parse: [] } };

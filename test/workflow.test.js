@@ -235,3 +235,13 @@ test('all ten history records fit Discord limits with full notes and cooldowns',
   assert.ok(payload.embeds[0].length <= 6000);
   assert.ok(historyMessage([]).embeds[0].toJSON());
 });
+
+test('history distinguishes active, expired and disabled cooldowns at the expiry boundary', () => {
+  const row = { id: 1, name: 'helper', status: 'denied', created: 0, cooldown_until: 60000 };
+  const value = (record, now) => historyMessage([record], now).embeds[0].toJSON().fields[0].value;
+  assert.match(value(row, 59999), /Reapply after: 1970-01-01T00:01:00.000Z/);
+  assert.match(value(row, 60000), /Cooldown ended: 1970-01-01T00:01:00.000Z/);
+  assert.match(value(row, 60001), /Cooldown ended:/);
+  assert.doesNotMatch(value(row, 60000), /Reapply after:/);
+  assert.doesNotMatch(value({ ...row, cooldown_until: 0 }, 60000), /Cooldown|Reapply/);
+});
