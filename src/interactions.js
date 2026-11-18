@@ -23,7 +23,7 @@ export function createInteractionHandler({ store, publish, log = data => console
   return async i => {
     if (!i.inGuild()) return;
     const chat = i.isChatInputCommand(), button = i.isButton(), modal = i.isModalSubmit();
-    if (!(chat && names.has(i.commandName)) && !(button && /^(apply|review|claim|followups|respond):/.test(i.customId)) &&
+    if (!(chat && names.has(i.commandName)) && !(button && /^(apply|review|claim|followups|respond|auditpage|queuepage):/.test(i.customId)) &&
       !(modal && /^(submit|followup-answer):/.test(i.customId))) return;
     const savedReply = async (a, message) => {
       let failed = false;
@@ -53,9 +53,16 @@ export function createInteractionHandler({ store, publish, log = data => console
         return await savedReply(a, `Application #${a.id} submitted. Check /app-history for decisions or follow-up requests.`);
       }
       const member = await i.guild.members.fetch(i.user.id);
-      if (chat && i.commandName === 'app-queue') {
+      if (button && i.customId.startsWith('auditpage:')) {
+        const parts = i.customId.split(':'), applicationId = id(parts[1]), page = id(parts[2]);
+        visible(store, i.guildId, applicationId, member, i.user.id, true);
+        return await i.editReply(auditMessage(applicationId, store.audit(i.guildId, applicationId, page)));
+      }
+      if ((chat && i.commandName === 'app-queue') || (button && i.customId.startsWith('queuepage:'))) {
+        const parts = button ? i.customId.split(':') : null;
         const result = store.reviewQueue({ guild: i.guildId, user: i.user.id, roles: [...member.roles.cache.keys()],
-          isManager: isManager(member), name: i.options.getString('name'), filter: i.options.getString('filter') || 'all', page: i.options.getInteger('page') || 1 });
+          isManager: isManager(member), name: parts ? decodeURIComponent(parts[3] || '') || null : i.options.getString('name'),
+          filter: parts ? parts[2] : i.options.getString('filter') || 'all', page: parts ? id(parts[1]) : i.options.getInteger('page') || 1 });
         return await i.editReply(queueMessage(result));
       }
       if (button && i.customId.startsWith('followups:')) {

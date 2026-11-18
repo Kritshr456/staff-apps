@@ -70,6 +70,8 @@ Filter with `filter:unclaimed`, `filter:mine` or `filter:waiting`, restrict by
 `name:<template>`, or choose `page:2`. Only applications matching your current
 reviewer roles are included; managers see all except their own applications.
 The queue shows ownership and follow-up status, never application answers.
+Use Previous/Next buttons to navigate queue and audit pages; every click checks
+your current permissions again. Queue buttons preserve the template and filter.
 
 ## Ask for more information
 

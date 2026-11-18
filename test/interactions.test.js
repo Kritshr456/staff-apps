@@ -198,3 +198,36 @@ test('queue replies are private and role revocation removes pending applications
     assert.ok(!JSON.stringify(revoked.output).includes('My original answer'));
   } finally { f.store.close(); }
 });
+
+test('audit navigation rechecks staff access on every click', async () => {
+  const f = suite();
+  try {
+    const id = await f.submit('applicant');
+    for (let n = 0; n < 6; n++) { f.store.claim('g', id, 'reviewer-1', true); f.store.unclaim('g', id, 'reviewer-1', true); }
+    const first = await f.call({ user: 'reviewer-1', command: 'app-audit', values: { id } });
+    const next = first.output.components[0].toJSON().components.find(b => b.label === 'Next').custom_id;
+    const second = await f.call({ user: 'reviewer-1', kind: 'button', customId: next });
+    assert.match(second.output.embeds[0].toJSON().footer.text, /Page 2/);
+    assert.equal(second.output.components[0].toJSON().components[0].label, 'Previous');
+    assert.match((await f.call({ kind: 'button', customId: next })).output, /access denied/);
+    f.roles.get('reviewer-1').clear();
+    assert.match((await f.call({ user: 'reviewer-1', kind: 'button', customId: next })).output, /access denied/);
+  } finally { f.store.close(); }
+});
+
+test('queue navigation preserves filters without bypassing revoked roles', async () => {
+  const f = suite();
+  try {
+    for (let n = 0; n < 6; n++) await f.submit(`applicant${n}`);
+    const first = await f.call({ user: 'reviewer-1', command: 'app-queue', values: { filter: 'unclaimed', name: 'helper' } });
+    const next = first.output.components[0].toJSON().components[0].custom_id;
+    const second = await f.call({ user: 'reviewer-1', kind: 'button', customId: next });
+    assert.match(second.output.embeds[0].toJSON().description, /unclaimed.*helper/);
+    assert.match(second.output.embeds[0].toJSON().footer.text, /Page 2/);
+    assert.equal(second.output.embeds[0].toJSON().fields.length, 1);
+    f.roles.get('reviewer-1').clear();
+    const revoked = await f.call({ user: 'reviewer-1', kind: 'button', customId: next });
+    assert.equal(revoked.output.components.length, 0);
+    assert.equal(revoked.output.embeds[0].toJSON().fields, undefined);
+  } finally { f.store.close(); }
+});

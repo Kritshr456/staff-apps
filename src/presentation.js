@@ -54,11 +54,18 @@ export function followupMessage(a, applicant = false) {
   }
   return { embeds: [embed], components: applicant ? responseButton(a) : [], allowedMentions: { parse: [] } };
 }
+function pageButtons(page, total, size, customId) {
+  const pages = Math.max(1, Math.ceil(total / size)), buttons = [];
+  if (page > 1 && total) buttons.push(new ButtonBuilder().setCustomId(customId(Math.min(page - 1, pages))).setLabel('Previous').setStyle(ButtonStyle.Secondary));
+  if (page < pages) buttons.push(new ButtonBuilder().setCustomId(customId(page + 1)).setLabel('Next').setStyle(ButtonStyle.Secondary));
+  return buttons.length ? [new ActionRowBuilder().addComponents(buttons)] : [];
+}
 export function auditMessage(id, result) {
   const description = result.events.map(e => `#${e.id} • ${e.event} • <@${e.actor}> • ${new Date(e.created).toISOString()}\n${JSON.stringify(e.details)}`).join('\n\n');
   return { embeds: [new EmbedBuilder().setTitle(`Audit • application #${id}`)
     .setDescription(description || 'No events on this page. Auditing starts with v1.2.0; older actions were not backfilled.')
-    .setFooter({ text: `Page ${result.page} • ${result.total} events • newest first` })], allowedMentions: { parse: [] } };
+    .setFooter({ text: `Page ${result.page} • ${result.total} events • newest first` })],
+    components: pageButtons(result.page, result.total, 10, page => `auditpage:${id}:${page}`), allowedMentions: { parse: [] } };
 }
 
 export function historyMessage(rows, now = Date.now()) {
@@ -84,5 +91,5 @@ export function queueMessage(result) {
   if (!result.rows.length) embed.setDescription('No reviewable applications on this page.');
   for (const a of result.rows) embed.addFields({ name: `#${a.id} ${a.name}`, value:
     `Applicant: <@${a.user}>\n${a.claimed_by ? `Claimed by: <@${a.claimed_by}>` : 'Unclaimed'}\nSubmitted: ${new Date(a.created).toISOString()}${a.awaiting_reply ? '\nAwaiting applicant response' : ''}` });
-  return { embeds: [embed], allowedMentions: { parse: [] } };
+  return { embeds: [embed], components: pageButtons(result.page, result.total, 5, page => `queuepage:${page}:${result.filter}:${encodeURIComponent(result.name || '')}`), allowedMentions: { parse: [] } };
 }

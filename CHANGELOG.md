@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.3.0
+
+- Add permission-checked Previous/Next buttons to queue and audit views.
+- Re-register guild commands after updating; existing application data is preserved.
 
 - Add a private, role-filtered pending review queue with template, claim and follow-up filters.
 
