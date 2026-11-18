@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- Preserve the saved review-message ID when fetching it fails temporarily or access is denied.
+- Recreate a review message only when Discord reports Unknown Message.
+- Add regression coverage for safe retries and confirmed deletion.
+
 ## 1.3.0
 
 - Add permission-checked Previous/Next buttons to queue and audit views.

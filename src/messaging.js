@@ -24,7 +24,10 @@ export function createPublisher(store) {
       let a = store.get(guild.id, id);
       if (!a) throw new AppError('Application not found.');
       const channel = await reviewChannel(guild, a.channel, a.role);
-      const message = a.message ? await channel.messages.fetch(a.message).catch(() => null) : null;
+      const message = a.message ? await channel.messages.fetch(a.message).catch(error => {
+        if (error.code === 10008) return null;
+        throw error;
+      }) : null;
       // Discord calls can yield while another interaction changes the saved application.
       a = store.get(guild.id, id);
       if (message) await message.edit(reviewMessage(a));

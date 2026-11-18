@@ -189,3 +189,7 @@ follow-ups or cooldowns. See [CHANGELOG.md](CHANGELOG.md) for release changes.
 Pull the update, run `npm ci` and restart. No command re-registration or database
 migration is needed for this patch. Use `/app-post id:<id>` to refresh an existing
 review message; later workflow changes also refresh its buttons automatically.
+
+Temporary review-message fetch failures preserve the saved message ID. Staff can
+retry with /app-post. A replacement is created when Discord confirms the saved
+message was deleted.
