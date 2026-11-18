@@ -193,3 +193,7 @@ review message; later workflow changes also refresh its buttons automatically.
 Temporary review-message fetch failures preserve the saved message ID. Staff can
 retry with /app-post. A replacement is created when Discord confirms the saved
 message was deleted.
+
+Confirmed message deletion is recovered even when it occurs between fetch and
+edit. Replacement messages use the latest saved application state. Network or
+permission errors still preserve the saved message ID and do not trigger reposts.

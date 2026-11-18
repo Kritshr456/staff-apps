@@ -30,11 +30,14 @@ export function createPublisher(store) {
       }) : null;
       // Discord calls can yield while another interaction changes the saved application.
       a = store.get(guild.id, id);
-      if (message) await message.edit(reviewMessage(a));
-      else {
-        const sent = await channel.send(reviewMessage(a));
-        store.setMessage(guild.id, id, sent.id);
+      if (message) {
+        try { await message.edit(reviewMessage(a)); return; }
+        catch (error) { if (error.code !== 10008) throw error; }
       }
+      // Confirmed deletion can also happen after fetch. Re-read before replacing it.
+      a = store.get(guild.id, id);
+      const sent = await channel.send(reviewMessage(a));
+      store.setMessage(guild.id, id, sent.id);
     });
     pending.set(key, job);
     try { await job; }

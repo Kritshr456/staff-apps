@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+
+- Recover confirmed deletion during review-message edits using fresh saved state; preserve IDs on all other failures.
+
 ## 1.3.1
 
 - Preserve the saved review-message ID when fetching it fails temporarily or access is denied.

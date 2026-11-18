@@ -141,3 +141,32 @@ test('a confirmed deleted review message is recreated and its replacement ID sav
     assert.deepEqual(f.sent[1].allowedMentions, { parse: [] });
   } finally { f.store.close(); }
 });
+
+test('a review message deleted between fetch and edit is recreated with current state', async () => {
+  const f = fixture();
+  try {
+    await f.publish(f.guild, f.a.id);
+    f.message.edit = async () => {
+      f.store.withdraw('g', f.a.id, f.a.user);
+      throw Object.assign(Error('Unknown Message'), { code: 10008 });
+    };
+    f.channel.send = async payload => { f.sent.push(payload); return { id: 'race-replacement' }; };
+    await f.publish(f.guild, f.a.id);
+    assert.equal(f.store.get('g', f.a.id).message, 'race-replacement');
+    assert.match(f.sent.at(-1).embeds[0].toJSON().description, /Status: withdrawn/);
+    assert.equal(f.sent.at(-1).components.length, 0);
+  } finally { f.store.close(); }
+});
+
+test('failed edits without a confirmed deletion preserve the message and never repost', async () => {
+  const f = fixture();
+  try {
+    await f.publish(f.guild, f.a.id);
+    for (const error of [Object.assign(Error('Missing access'), {code:50001}), Object.assign(Error('Unavailable'), {status:503})]) {
+      f.message.edit = async () => { throw error; };
+      await assert.rejects(f.publish(f.guild, f.a.id));
+      assert.equal(f.sent.length, 1);
+      assert.equal(f.store.get('g', f.a.id).message, 'message');
+    }
+  } finally { f.store.close(); }
+});
